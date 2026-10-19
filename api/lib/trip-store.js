@@ -16,6 +16,7 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 function demoItinerary(req) {
   const start = normalizeDate(req.start_date);
   const end = normalizeDate(req.end_date);
+  const interests = Array.isArray(req.interests) ? req.interests : [];
   const daysCount = start && end ? Math.max(1, Math.min((end - start) / (1000 * 60 * 60 * 24) + 1, 14)) : 3;
   const places = [
     ['09:00', 'Local breakfast', 'Start with a well-rated local breakfast spot.', 'Food', 350],
@@ -57,7 +58,7 @@ function demoItinerary(req) {
   const estimate = days.reduce((sum, dayItem) => sum + Number(dayItem.daily_estimate || 0), 0);
   return {
     title: `${Math.max(1, Math.round(daysCount))}-day ${req.destination} escape`,
-    summary: `A ${pace} ${travelStyle} trip focused on ${req.interests?.join(', ') || 'local highlights'}. This starter itinerary uses sample activities; verify opening hours, prices, and transport before travelling.`,
+    summary: `A ${pace} ${travelStyle} trip focused on ${interests.join(', ') || 'local highlights'}. This starter itinerary uses sample activities; verify opening hours, prices, and transport before travelling.`,
     estimated_total: estimate,
     days,
   };
@@ -67,9 +68,10 @@ async function generateWithAi(req) {
   const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY;
   if (!apiKey) return null;
 
+  const interests = Array.isArray(req.interests) ? req.interests : [];
   const endpoint = (process.env.AI_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
   const model = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
-  const prompt = `Create a practical travel itinerary as valid JSON only, with keys title, summary, estimated_total, days. Each days item has day, date, theme, activities (array of objects with time, name, description, category, estimated_cost, duration, location), and daily_estimate. Do not claim live availability or exact route data. Destination: ${req.destination}; dates: ${req.start_date} to ${req.end_date}; budget total: ${req.budget}; travelers: ${req.travelers}; style: ${req.travel_style}; pace: ${req.pace}; interests: ${String(req.interests || []).join(', ')}; notes: ${req.notes || ''}. Keep costs plausible and total within budget where possible.`;
+  const prompt = `Create a practical travel itinerary as valid JSON only, with keys title, summary, estimated_total, days. Each days item has day, date, theme, activities (array of objects with time, name, description, category, estimated_cost, duration, location), and daily_estimate. Do not claim live availability or exact route data. Destination: ${req.destination}; dates: ${req.start_date} to ${req.end_date}; budget total: ${req.budget}; travelers: ${req.travelers}; style: ${req.travel_style}; pace: ${req.pace}; interests: ${interests.join(', ')}; notes: ${req.notes || ''}. Keep costs plausible and total within budget where possible.`;
 
   try {
     const response = await fetch(`${endpoint}/chat/completions`, {

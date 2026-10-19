@@ -43,17 +43,19 @@ vercel-single-deploy/
 npm install
 ```
 
-3. Start the app:
+3. Start the app and its local API:
 
 ```bash
-npm run dev
+npm run dev:vercel
 ```
 
 4. Open the local site in your browser:
 
 ```text
-http://localhost:5173
+http://localhost:8000
 ```
+
+This uses Vercel's local runtime to serve both the frontend and the `/api` serverless functions without linking the project to a Vercel account. `npm run dev` still starts Vite alone, so it does not provide the API.
 
 ## API behavior
 
